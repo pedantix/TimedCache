@@ -2,16 +2,16 @@ import XCTest
 @testable import TimedCache
 
 final class DictionaryCacheTests: XCTestCase {
+    let myTest = "MyTest"
+    let myKey = "MyKey"
+
     func testGettingNotSetObject() {
-        let myKey = "MyKey"
         let dictCache = DictionaryCache()
         XCTAssertNil(dictCache[myKey])
         XCTAssertNil(dictCache.get(key: myKey))
     }
 
     func testSettingObjectNotExpired() {
-        let myTest = "MyTest"
-        let myKey = "MyKey"
         var dictCache = DictionaryCache()
         dictCache.set(myTest, for: myKey, expiring: 500)
         XCTAssertEqual(dictCache.get(key: myKey) as? String, myTest)
@@ -19,8 +19,6 @@ final class DictionaryCacheTests: XCTestCase {
     }
 
     func testSettingObjectExpired() {
-        let myTest = "MyTest"
-        let myKey = "MyKey"
         var dictCache = DictionaryCache()
         dictCache.set(myTest, for: myKey, expiring: -500)
         XCTAssertNil(dictCache[myKey])
@@ -28,8 +26,6 @@ final class DictionaryCacheTests: XCTestCase {
     }
 
     func testBySettingWithoutExpiration() {
-        let myTest = "MyTest"
-        let myKey = "MyKey"
         var dictCache = DictionaryCache()
         dictCache.set(myTest, for: myKey)
         XCTAssertEqual(dictCache.get(key: myKey) as? String, myTest)
@@ -37,10 +33,38 @@ final class DictionaryCacheTests: XCTestCase {
     }
 
     func testBySettingWithoutExpirationWithSubscript() {
+        var dictCache = DictionaryCache()
+        dictCache[myKey] = myTest
+        XCTAssertEqual(dictCache.get(key: myKey) as? String, myTest)
+        XCTAssertEqual(dictCache[myKey] as? String, myTest)
+    }
+
+    func testRemove() {
         let myTest = "MyTest"
         let myKey = "MyKey"
         var dictCache = DictionaryCache()
         dictCache[myKey] = myTest
+        XCTAssertEqual(dictCache.get(key: myKey) as? String, myTest)
+        dictCache.remove(key: myKey)
+        XCTAssertNil(dictCache[myKey])
+    }
+
+    func testDidReceiveMemoryWarning() {
+        var dictCache = DictionaryCache()
+        dictCache.set(myTest, for: myKey)
+        XCTAssertEqual(dictCache.get(key: myKey) as? String, myTest)
+        XCTAssertEqual(dictCache[myKey] as? String, myTest)
+
+        dictCache.didReceiveMemoryWarning()
+        XCTAssertEqual(dictCache.get(key: myKey) as? String, myTest)
+        XCTAssertEqual(dictCache[myKey] as? String, myTest)
+
+
+        dictCache.set(myTest, for: myKey, expiring: 500)
+        XCTAssertEqual(dictCache.get(key: myKey) as? String, myTest)
+        XCTAssertEqual(dictCache[myKey] as? String, myTest)
+
+        dictCache.didReceiveMemoryWarning()
         XCTAssertEqual(dictCache.get(key: myKey) as? String, myTest)
         XCTAssertEqual(dictCache[myKey] as? String, myTest)
     }
@@ -50,6 +74,7 @@ final class DictionaryCacheTests: XCTestCase {
         ("testSettingObjectNotExpired", testSettingObjectNotExpired),
         ("testSettingObjectExpired", testSettingObjectExpired),
         ("testBySettingWithoutExpiration", testBySettingWithoutExpiration),
-        ("testBySettingWithoutExpirationWithSubscript", testBySettingWithoutExpirationWithSubscript)
+        ("testBySettingWithoutExpirationWithSubscript", testBySettingWithoutExpirationWithSubscript),
+        ("testRemove", testRemove)
     ]
 }

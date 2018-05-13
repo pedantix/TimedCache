@@ -3,6 +3,10 @@ import Foundation
 internal struct DictionaryCacheContainer {
     var expiration: Date?
     var cached: Any
+
+    var expired: Bool {
+        return ((expiration?.compare(Date()) ?? .orderedSame) == .orderedAscending)
+    }
 }
 
 public struct DictionaryCache: TimedCache {
@@ -26,11 +30,8 @@ public struct DictionaryCache: TimedCache {
 
     public func get(key: AnyHashable) -> Any? {
         return queue.sync {
-            guard let cacheContainer = dictionary[key] else { return nil }
-            guard let expiration = cacheContainer.expiration else {
-                return cacheContainer.cached
-            }
-            guard expiration.compare(Date()) != .orderedAscending else { return nil }
+            guard let cacheContainer = dictionary[key],
+                !cacheContainer.expired else { return nil }
             return cacheContainer.cached
         }
     }
@@ -43,6 +44,22 @@ public struct DictionaryCache: TimedCache {
         set(value) {
             guard let val = value else { return }
             self.set(val, for: key)
+        }
+    }
+
+    public mutating func remove(key: AnyHashable) {
+        queue.sync {
+            _ = dictionary.removeValue(forKey: key)
+        }
+    }
+
+    public mutating func didReceiveMemoryWarning() {
+        queue.sync {
+            for (key,value) in dictionary {
+                if value.expired {
+                    dictionary.removeValue(forKey: key)
+                }
+            }
         }
     }
 }
