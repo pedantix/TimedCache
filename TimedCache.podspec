@@ -7,7 +7,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'TimedCache'
-  s.version          = '0.1.0'
+  s.version          = '1.0.0'
   s.summary          = 'Yet another caching library.'
   s.description      = <<-DESC
 This package is a protcol oriented cache implementation with a centrailized feature of expiration. Expiration is optional by definition of the protocol, but not the original intention. The only included implemenation is DictionaryCache, which is in fact thread safe.
