@@ -5,11 +5,11 @@ internal struct DictionaryCacheContainer {
     var cached: Any
 }
 
-struct DictionaryCache: TimedCache {
+public struct DictionaryCache: TimedCache {
     private let queue: DispatchQueue = DispatchQueue(label: "com.shauncodes.DictionaryCache")
     private var dictionary: [AnyHashable: DictionaryCacheContainer] = [:]
 
-    mutating func set(_ object: Any, for key: AnyHashable, expiring timeFromNow: TimeInterval) {
+    public mutating func set(_ object: Any, for key: AnyHashable, expiring timeFromNow: TimeInterval) {
         queue.sync {
             let expiration = Date().addingTimeInterval(timeFromNow)
             dictionary[key] = DictionaryCacheContainer(expiration: expiration,
@@ -17,14 +17,14 @@ struct DictionaryCache: TimedCache {
         }
     }
 
-    mutating func set(_ object: Any, for key: AnyHashable) {
+    public mutating func set(_ object: Any, for key: AnyHashable) {
         queue.sync {
             dictionary[key] = DictionaryCacheContainer(expiration: nil, cached: object)
         }
     }
 
 
-    func get(key: AnyHashable) -> Any? {
+    public func get(key: AnyHashable) -> Any? {
         return queue.sync {
             guard let cacheContainer = dictionary[key] else { return nil }
             guard let expiration = cacheContainer.expiration else {
@@ -35,7 +35,7 @@ struct DictionaryCache: TimedCache {
         }
     }
 
-    subscript(key: AnyHashable) -> Any? {
+    public subscript(key: AnyHashable) -> Any? {
         get {
             return self.get(key: key)
         }
