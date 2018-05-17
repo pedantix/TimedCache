@@ -1,29 +1,38 @@
 import Foundation
 
-internal struct DictionaryCacheContainer {
-    var expiration: Date?
-    var cached: Any
+internal enum Node {
+    case expiring(Date, Any)
+    case nonExpiring(Any)
+
+    var cached: Any {
+        switch self {
+        case let .expiring(_, data):
+            return data
+        case let .nonExpiring(data):
+            return data
+        }
+    }
 
     var expired: Bool {
-        return ((expiration?.compare(Date()) ?? .orderedSame) == .orderedAscending)
+        guard case let .expiring(date, _) = self else  { return false }
+        return date.compare(Date()) == .orderedAscending
     }
 }
 
 public struct DictionaryCache: TimedCache {
     private let queue: DispatchQueue = DispatchQueue(label: "com.shauncodes.DictionaryCache")
-    private var dictionary: [AnyHashable: DictionaryCacheContainer] = [:]
+    private var dictionary: [AnyHashable: Node] = [:]
 
     public mutating func set(_ object: Any, for key: AnyHashable, expiring timeFromNow: TimeInterval) {
         queue.sync {
             let expiration = Date().addingTimeInterval(timeFromNow)
-            dictionary[key] = DictionaryCacheContainer(expiration: expiration,
-                                                       cached: object)
+            dictionary[key] = Node.expiring(expiration, object)
         }
     }
 
     public mutating func set(_ object: Any, for key: AnyHashable) {
         queue.sync {
-            dictionary[key] = DictionaryCacheContainer(expiration: nil, cached: object)
+            dictionary[key] = .nonExpiring(object)
         }
     }
 
